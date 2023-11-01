@@ -127,6 +127,49 @@ public class StepAppOpenHelper extends SQLiteOpenHelper {
     }
 
 
+//    public static Map<Integer, Integer> loadStepsByDay
+
+    public static Map<String, Integer> loadStepsByDay(Context context, String date) {
+        // 1. Define a map to store the day and number of steps as key-value pairs
+        Map<String, Integer> map = new HashMap<>();
+
+        // 2. Get the readable database
+        StepAppOpenHelper databaseHelper = new StepAppOpenHelper(context);
+        SQLiteDatabase database = databaseHelper.getReadableDatabase();
+
+        // 3. Define the query to get the data for a specific date
+        String query = "SELECT " + KEY_DAY + ", COUNT(" + KEY_ID + ") as TotalSteps FROM " + TABLE_NAME + " WHERE " + KEY_DAY + " = ? GROUP BY " + KEY_DAY;
+        Cursor cursor = database.rawQuery(query, new String[]{date});
+
+        // 4. Iterate over returned elements on the cursor
+        while (cursor.moveToNext()) {
+            final int keyDayCol = cursor.getColumnIndex(KEY_DAY);
+            if (keyDayCol == -1) {
+                throw new IllegalStateException("Column " + KEY_DAY + " does not exist in the database");
+            }
+
+            final int totalStepsCol = cursor.getColumnIndex("TotalSteps");
+            if (totalStepsCol == -1) {
+                throw new IllegalStateException("Column TotalSteps does not exist in the database");
+            }
+
+            final String tmpKey = cursor.getString(keyDayCol);
+            final int tmpValue = cursor.getInt(totalStepsCol);
+
+            // Put the data from the database into the map
+            map.put(tmpKey, tmpValue);
+        }
+
+        // 5. Close the cursor and database
+        cursor.close();
+        database.close();
+
+        // 6. Return the map with days and number of steps
+        return map;
+    }
+
+
+
     @Override
     public void onCreate(SQLiteDatabase sqLiteDatabase) {
 
